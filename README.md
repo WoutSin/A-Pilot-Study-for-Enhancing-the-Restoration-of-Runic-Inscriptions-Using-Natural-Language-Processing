@@ -1,46 +1,60 @@
 # Runic Inscription Emendation
 
-This Python script is designed to reconstruct incomplete runic inscriptions from the Medieval and Viking Age periods using n-gram probabilities and a modified Minimum Edit Distance algorithm. The script processes a dataset of runic inscriptions, extracts n-gram probabilities and generates potential candidates for missing or incomplete tokens in the inscriptions.
+This Python script is designed to reconstruct incomplete or missing runic inscriptions from the Medieval and Viking Age periods using n-gram probabilities, a modified Minimum Edit Distance algorithm and an optional normalization layer that maps runic variants to standardized Old Scandinavian forms. The script processes a dataset of runic inscriptions, extracts n-gram probabilities and generates potential candidates for missing or incomplete tokens in the inscriptions.
 
 ## Features
 
-- Reads runic inscriptions from a text file and metadata from an Excel file.
-- Filters the dataset to include only inscriptions from the Medieval and Viking Age periods.
-- Tokenizes the inscriptions and tags tokens as complete (`<com>`), incomplete (`<inc>`), or missing (`<mis>`).
-- Extracts unigram, bigram and trigram probabilities from the training data.
-- Generates potential candidates for incomplete tokens based on the n-gram probabilities and context.
-- Filters out the most likely candidates using a modified MED algorithm
-- Evaluates the performance of the reconstruction using prediction coverage, accuracy and Mean Reciprocal Rank metrics.
+- Reads transliterated runic inscriptions from an Excel file.  
+- Cleans and tokenizes inscriptions and tags tokens as complete (`<com>`), incomplete (`<inc>`), or missing (`<mis>`).  
+- Extracts unigram, bigram and trigram probabilities from the training data.  
+- Optionally normalizes runic variants using a mapping file (`scandi_runic_all_mapping.json`) to group equivalent forms.  
+- Generates potential candidates for incomplete tokens based on n-gram probabilities and contextual information.  
+- Predicts missing tokens using trigram and optionally bigram probabilities, with optional normalization-based back-off.  
+- Filters out the most likely candidates using a modified MED algorithm.  
+- Evaluates the performance of the reconstruction using prediction coverage, accuracy and Mean Reciprocal Rank metrics.  
 
 ## Usage
 
-1. Ensure that you have the required dependencies installed (e.g., pandas, numpy, tqdm, sklearn).
-2. Place the runic inscription text file (RUNTEXTX.txt) and the metadata Excel file (RUNDATA.xls) in the same directory as the script.
-3. Run the script: `python Sinnaeve_Wout_IC2_Code.py`
-4. The script will process the data, extract n-gram probabilities, generate candidates for a synthetic test set and evaluate the performance for different values of k (maximum number of candidates considered).
-5. The results will be saved in an Excel file (results_non_0.xlsx) in the same directory.
+1. Ensure that you have the required dependencies installed (e.g., pandas, numpy, tqdm, sklearn).  
+2. Place the transliterated inscription Excel file (`rundata-net_results.xlsx`) and, if desired, the normalization mapping file (`scandi_runic_all_mapping.json`) in the same directory as the script.  
+3. Run the script: `python script.py`  
+4. The script will process the data, extract literal and optionally normalized n-gram probabilities, generate candidates for a synthetic test set and evaluate the performance for different values of k (maximum number of candidates considered).  
+5. The results will be saved as Excel files (`results_inc.xlsx`, `results_mis.xlsx`, `results_combined.xlsx`) in the same directory, together with supporting text and pickle files.  
 
 ## Dependencies
 
-- pandas
-- pickle
-- numpy
-- tqdm
-- sklearn
+- copy  
+- json  
+- pickle  
+- random  
+- numpy  
+- pandas  
+- tqdm  
+- pathlib  
+- collections  
+- sklearn  
+- typing  
+- openpyxl  
 
 ## Hyperparameters
 
 The script includes the following hyperparameters that can be adjusted:
 
-- `number_predictions`: The maximum number of predictions that the `get_best_candidates` function may return for each incomplete token. A higher value will increase accuracy, but also the amount of work required to manually evaluate the candidates.
-- `unigram_candidates_dict`: If set to `None`, unigram candidates will not be considered. If set to `unigram_candidates_dict`, unigram candidates will be considered (this is the recommended setting).
-- `maximum_score`: The maximum allowed modified Minimum Edit Distance between the actual token and the candidate token. A higher value will increase the recall but may decrease the accuracy.
+- `test_mode`: If set to `True`, uses a reduced subset of the dataset for troubleshooting.  
+- `mask_missing_during_eval`: If `True`, synthetic missing tokens (`<mis>`) are created before incomplete ones (`<inc>`) for evaluation.  
+- `mask_fraction`: The fraction of tokens to be masked as `<mis>` in the synthetic test data.  
+- `use_bigrams_for_mis`: Determines whether bigrams are used, in addition to trigrams, when predicting missing tokens.  
+- `use_normalization_for_mis`: Enables normalization-based back-off during missing token prediction.  
+- `use_unigrams`: Determines whether unigrams are included when generating candidates for incomplete tokens.  
+- `normalization_json_path`: The path to the normalization mapping file used for variant standardization.  
 
 ## Notes
 
-- The script generates a synthetic test set by altering complete inscriptions from the original dataset. The test set is used for evaluation purposes.
-- The script saves the extracted n-gram probabilities to a text file (n-gram_probabilities.txt) and the n-gram tokens to pickle files (unigram_tokens.pkl, bigram_tokens.pkl, trigram_tokens.pkl).
+- The script automatically builds both literal and normalized n-gram probability models if a normalization mapping is available.  
+- It generates a synthetic test set by altering complete inscriptions from the original dataset. The test set is used for evaluation purposes.  
+- The script saves extracted n-gram probabilities to a text file (`n-gram_probabilities.txt`) and the n-gram tokens to pickle files (`unigram_tokens.pkl`, `bigram_tokens.pkl`, `trigram_tokens.pkl`), along with normalized versions when applicable.  
+- Evaluation metrics are calculated separately for incomplete (`<inc>`), missing (`<mis>`) and combined predictions.  
 
-## Noteboook
+## Notebook
 
-The tool itself is made available as a Colab Notebook and can be found in the Colab_Notebook folder along with the dependencies. You can run the model on your own selection of runic inscriptions by modifying the `runic_inscriptions.txt` file. Be sure to employ - and … characters as placeholders.
+The tool itself is made available as a Colab Notebook and can be found in the `Colab_Notebook` folder along with the dependencies. You can run the model on your own selection of runic inscriptions by modifying the `runic_inscriptions.txt` file. Be sure to employ `-` and `…` characters as placeholders.
