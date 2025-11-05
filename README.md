@@ -1,4 +1,4 @@
-# Runic Inscription Emendation
+# A Pilot Study for Enhancing the Restoration of Runic Inscriptions Using Natural Language Processing Techniques
 
 This Python script is designed to reconstruct incomplete or missing runic inscriptions from the Medieval and Viking Age periods using n-gram probabilities, a modified Minimum Edit Distance algorithm and an optional normalization layer that maps runic variants to standardized Old Scandinavian forms. The script processes a dataset of runic inscriptions, extracts n-gram probabilities and generates potential candidates for missing or incomplete tokens in the inscriptions.
 
