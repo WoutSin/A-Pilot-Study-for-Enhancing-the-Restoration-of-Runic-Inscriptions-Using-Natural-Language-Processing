@@ -23,13 +23,10 @@ This Python script is designed to reconstruct incomplete or missing runic inscri
 
 ## Dependencies
 
-numpy==2.3.5
-
-pandas==2.3.3
-
-scikit-learn==1.7.2
-
-tqdm==4.67.1
+- numpy==2.3.5
+- pandas==2.3.3
+- scikit-learn==1.7.2
+- tqdm==4.67.1
 
 
 ## Hyperparameters
