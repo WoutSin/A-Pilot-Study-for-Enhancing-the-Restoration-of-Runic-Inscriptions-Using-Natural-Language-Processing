@@ -50,4 +50,4 @@ The script includes the following hyperparameters that can be adjusted:
 
 ## Notebook
 
-The tool itself is made available as a Colab Notebook and can be found in the `Colab_Notebook` folder along with the dependencies. You can run the model on multiple inscriptions at a time by creating a file titled `runic_inscriptions.txt,` providing one inscriptions per line. Be sure to employ `-` and `…` characters as placeholders.
+The tool itself is made available as a Colab Notebook and can be found in the `Colab_Notebook` folder along with the dependencies. You can run the model on multiple inscriptions at a time by creating a file named `runic_inscriptions.txt,` providing one inscriptions per line. Be sure to employ `-` and `…` characters as placeholders.
