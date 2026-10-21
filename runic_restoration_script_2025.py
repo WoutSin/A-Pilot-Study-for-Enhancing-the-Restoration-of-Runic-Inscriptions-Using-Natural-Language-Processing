@@ -9,6 +9,7 @@ from pathlib import Path
 from collections import Counter, defaultdict
 from sklearn.model_selection import train_test_split
 from typing import Dict, Iterable, List, Optional, Tuple, Union
+from itertools import product
 
 
 # Core utilities
@@ -37,6 +38,7 @@ def remove_punctuation(input_string, punctuation):
     return no_punct
 
 
+
 def print_non_alpha(runic_list):
     """
     Input:
@@ -50,7 +52,7 @@ def print_non_alpha(runic_list):
             [
                 char
                 for char in item
-                if not char.isalnum() and char not in ["-", "…", " "]
+                if not char.isalnum() and char not in ["-", "…", " ", "/"]
             ]
         )
     return "".join(non_alpha_chars)
@@ -104,6 +106,19 @@ def split_data(tagged_sequences):
     return train, test
 
 
+def get_token_alternatives(token):
+    """
+    Input:
+        token: token that may contain alternative readings
+    Output:
+        alternatives: list of possible readings of the token
+    """
+    alternatives = token.split("/")
+    return alternatives
+
+
+
+
 def extract_ngram_probabilities(tagged_sequences):
     """
     Input:
@@ -118,27 +133,30 @@ def extract_ngram_probabilities(tagged_sequences):
     for tagged_sequence in tagged_sequences:
         com_items = []
 
-        for i in range(len(tagged_sequence)):
-            if tagged_sequence[i][1] == "<com>":
-                com_items.append(tagged_sequence[i][0])
-                unigrams[tagged_sequence[i][0]] += 1
-            else:
-                com_items.append(None)
+        for token, tag in tagged_sequence:
+            alternatives = get_token_alternatives(token)
+            tagged_alternatives = get_tags(alternatives)
 
-        for i in range(len(com_items)):
-            if (
-                i < len(com_items) - 1
-                and com_items[i] is not None
-                and com_items[i + 1] is not None
+            complete_alternatives = [
+                reading
+                for reading, reading_tag in tagged_alternatives
+                if reading_tag == "<com>"
+            ]
+
+            com_items.append(complete_alternatives)
+
+            for reading in complete_alternatives:
+                unigrams[reading] += 1
+
+        for i in range(len(com_items) - 1):
+            for word1, word2 in product(com_items[i], com_items[i + 1]):
+                bigrams[word1][word2] += 1
+
+        for i in range(len(com_items) - 2):
+            for word1, word2, word3 in product(
+                com_items[i], com_items[i + 1], com_items[i + 2]
             ):
-                bigrams[com_items[i]][com_items[i + 1]] += 1
-            if (
-                i < len(com_items) - 2
-                and com_items[i] is not None
-                and com_items[i + 1] is not None
-                and com_items[i + 2] is not None
-            ):
-                trigrams[(com_items[i], com_items[i + 1])][com_items[i + 2]] += 1
+                trigrams[(word1, word2)][word3] += 1
 
     total_unigrams = sum(unigrams.values()) or 1
     for word in unigrams:
@@ -155,6 +173,7 @@ def extract_ngram_probabilities(tagged_sequences):
             trigrams[words][next_word] /= total_count
 
     return unigrams, bigrams, trigrams
+
 
 
 def save_probabilities_to_file(unigrams, bigrams, trigrams, filename):
@@ -450,12 +469,10 @@ def integrate_candidates(sequences, best_candidates, k):
 def extract_test_samples(test_set):
     """
     Input:
-        test_set: list of test sequences
+        test_set: list of tagged test sequences
     Output:
-        test_set: filtered list of usable test sequences
-    Description:
-        Extracts contiguous subsequences of complete (<com>) tokens.
-        Returns only sequences of at least 4 complete tokens.
+        filtered_sequences: longest sequences of at least four complete
+            tokens, with one interpretation selected per token
     """
     filtered_sequences = []
 
@@ -464,8 +481,17 @@ def extract_test_samples(test_set):
         current_sequence = []
 
         for token, tag in sequence:
-            if tag == "<com>":
-                current_sequence.append(token)
+            alternatives = get_token_alternatives(token)
+            complete_alternatives = [
+                alternative
+                for alternative, alternative_tag in get_tags(alternatives)
+                if alternative_tag == "<com>"
+            ]
+
+            if complete_alternatives:
+                selected_token = complete_alternatives[0]
+                current_sequence.append(selected_token)
+
                 if len(current_sequence) > len(longest_sequence):
                     longest_sequence = current_sequence[:]
             else:
@@ -475,7 +501,6 @@ def extract_test_samples(test_set):
             filtered_sequences.append(longest_sequence)
 
     return filtered_sequences
-
 
 def alter_token(token, seed):
     """
