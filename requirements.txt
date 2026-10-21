@@ -2,4 +2,5 @@ numpy
 pandas
 scikit-learn
 tqdm
-openpyxl
+openpyxl==3.0.10; python_version < "3.9"
+openpyxl>=3.1.0; python_version >= "3.9"

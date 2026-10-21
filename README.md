@@ -1,53 +1,195 @@
-# A Pilot Study for Enhancing the Restoration of Runic Inscriptions Using Natural Language Processing Techniques
+# Runic Inscription Restoration
 
-This Python script is designed to reconstruct incomplete or missing runic inscriptions from the Medieval and Viking Age periods using n-gram probabilities, a modified Minimum Edit Distance algorithm and an optional normalization layer that maps runic variants to standardized Old Scandinavian forms. The script processes a dataset of runic inscriptions, extracts n-gram probabilities and generates potential candidates for missing or incomplete tokens in the inscriptions.
+An experimental natural language processing (NLP) pipeline for restoring incomplete and missing text in transliterated runic inscriptions using statistical n-gram language models.
 
-## Features
+The project uses unigram, bigram, and trigram statistics to generate and rank candidate reconstructions. It also supports normalization of runic variants and evaluates restoration performance using synthetically corrupted inscriptions.
 
-- Reads transliterated runic inscriptions from an Excel file.  
-- Cleans and tokenizes inscriptions and tags tokens as complete (`<com>`), incomplete (`<inc>`), or missing (`<mis>`).  
-- Extracts unigram, bigram and trigram probabilities from the training data.  
-- Optionally normalizes runic variants using a mapping file (`scandi_runic_all_mapping.json`) to group equivalent forms.  
-- Generates potential candidates for incomplete tokens based on n-gram probabilities and contextual information.  
-- Predicts missing tokens using trigram and optionally bigram probabilities, with optional normalization-based back-off.  
-- Filters out the most likely candidates using a modified MED algorithm.  
-- Evaluates the performance of the reconstruction using prediction coverage, accuracy and Mean Reciprocal Rank metrics.  
+### Directory Descriptions
+
+- **`inputs/`** — Source datasets, normalization mappings, and example inscriptions.
+- **`runic_restoration/`** — Python package containing the restoration and evaluation logic.
+- **`notebooks/`** — Jupyter notebooks for interactive exploration and inference.
+- **`outputs/`** — Generated datasets, predictions, evaluation results, and model files.
+
+### Python Modules
+
+| Module | Description |
+|---|---|
+| `preprocessing.py` | Dataset loading, cleaning, tokenization, and tagging |
+| `ngrams.py` | Construction and export of n-gram frequency and probability models |
+| `candidates.py` | Candidate generation, ranking, and restoration |
+| `normalization.py` | Runic variant normalization and normalized language models |
+| `evaluation.py` | Synthetic corruption and evaluation metrics |
+| `pipeline.py` | Execution of the complete experimental workflow |
+
+## Installation
+
+### Requirements
+
+- Python 3
+- pip
+- GNU Make (optional)
+
+Python package dependencies are listed in `requirements.txt`.
+
+### Set Up the Environment
+
+Create and activate a virtual environment:
+
+```bash
+python3 -m venv .venv
+source .venv/bin/activate
+```
+
+Install dependencies:
+
+```bash
+make install
+```
+
+Alternatively:
+
+```bash
+python3 -m pip install -r requirements.txt
+```
 
 ## Usage
 
-1. Ensure that you have the required dependencies installed (e.g., pandas, numpy, tqdm, sklearn).  
-2. Place the transliterated inscription Excel file (`rundata-net_results.xlsx`) and, if desired, the normalization mapping file (`scandi_runic_all_mapping.json`) in the same directory as the script.  
-3. Run the script: `python script.py`  
-4. The script will process the data, extract literal and optionally normalized n-gram probabilities, generate candidates for a synthetic test set and evaluate the performance for different values of k (maximum number of candidates considered).  
-5. The results will be saved as Excel files (`results_inc.xlsx`, `results_mis.xlsx`, `results_combined.xlsx`) in the same directory, together with supporting text and pickle files.  
+### Run the Complete Pipeline
 
-## Dependencies
+Execute:
 
-- numpy==2.3.5
-- pandas==2.3.3
-- scikit-learn==1.7.2
-- tqdm==4.67.1
+```bash
+make run
+```
 
+Alternatively:
 
-## Hyperparameters
+```bash
+python3 run.py
+```
 
-The script includes the following hyperparameters that can be adjusted:
+The pipeline loads the input dataset and normalization mapping, processes the inscriptions, constructs n-gram models, generates restoration candidates, evaluates the predictions, and saves the results to `outputs/`.
 
-- `test_mode`: If set to `True`, uses a reduced subset of the dataset for troubleshooting.  
-- `mask_missing_during_eval`: If `True`, synthetic missing tokens (`<mis>`) are created before incomplete ones (`<inc>`) for evaluation.  
-- `mask_fraction`: The fraction of tokens to be masked as `<mis>` in the synthetic test data.  
-- `use_bigrams_for_mis`: Determines whether bigrams are used, in addition to trigrams, when predicting missing tokens.  
-- `use_normalization_for_mis`: Enables normalization-based back-off during missing token prediction.  
-- `use_unigrams`: Determines whether unigrams are included when generating candidates for incomplete tokens.  
-- `normalization_json_path`: The path to the normalization mapping file used for variant standardization.  
+### Test Mode
 
-## Notes
+For a smaller experimental run:
 
-- The script automatically builds both literal and normalized n-gram probability models if a normalization mapping is available.  
-- It generates a synthetic test set by altering complete inscriptions from the original dataset. The test set is used for evaluation purposes.  
-- The script saves extracted n-gram probabilities to a text file (`n-gram_probabilities.txt`) and the n-gram tokens to pickle files (`unigram_tokens.pkl`, `bigram_tokens.pkl`, `trigram_tokens.pkl`), along with normalized versions when applicable.  
-- Evaluation metrics are calculated separately for incomplete (`<inc>`), missing (`<mis>`) and combined predictions.  
+```bash
+make test
+```
 
-## Notebook
+Alternatively:
 
-The tool itself is made available as a Colab Notebook and can be found in the `Colab_Notebook` folder along with the dependencies. You can run the model on multiple inscriptions at a time by creating a file named `runic_inscriptions.txt,` providing one inscriptions per line. Be sure to employ `-` and `…` characters as placeholders.
+```bash
+python3 run.py --test-mode
+```
+
+### Custom Configuration
+
+The command-line interface supports specifying input files and output directories:
+
+```bash
+python3 run.py \
+    --input inputs/rundata-net_results.xlsx \
+    --mapping inputs/scandi_runic_all_mapping.json \
+    --output-dir outputs
+```
+
+To view all available options:
+
+```bash
+python3 run.py --help
+```
+
+## Makefile Commands
+
+| Command | Description |
+|---|---|
+| `make install` | Install Python dependencies |
+| `make run` | Execute the complete restoration pipeline |
+| `make test` | Execute the pipeline in test mode |
+| `make check` | Check Python source compilation |
+| `make clean` | Remove generated reports and intermediate files while retaining model pickle files |
+
+## Methodology
+
+### 1. Data Preprocessing
+
+Runic inscriptions are loaded from the input dataset and prepared for language modeling.
+
+Processing includes text cleaning, tokenization, and identification of tokens marked as incomplete or missing.
+
+The pipeline distinguishes between two restoration tasks:
+
+- `<inc>` — Incomplete tokens requiring reconstruction.
+- `<mis>` — Missing tokens requiring prediction.
+
+### 2. N-gram Language Modeling
+
+The pipeline constructs statistical language models using token sequences extracted from the inscriptions.
+
+Three n-gram orders are supported:
+
+- **Unigrams:** Individual token frequencies.
+- **Bigrams:** Frequencies and probabilities of consecutive token pairs.
+- **Trigrams:** Frequencies and probabilities of consecutive token triples.
+
+These statistics provide contextual information for ranking potential restorations.
+
+### 3. Candidate Generation and Restoration
+
+Restoration candidates are generated and ranked using the available n-gram statistics.
+
+The pipeline supports unigram-based restoration for incomplete tokens and context-based prediction for missing tokens.
+
+### 4. Normalization
+
+A normalization mapping is used to associate variant runic forms with standardized representations.
+
+Normalized language models provide an additional source of information when selecting restoration candidates.
+
+### 5. Evaluation
+
+Restoration performance is evaluated using synthetically corrupted inscription data.
+
+The evaluation workflow masks or alters selected tokens and compares the predicted restorations against the original reference tokens.
+
+Results are produced separately for incomplete-token restoration, missing-token prediction, and combined evaluation.
+
+## Outputs
+
+Generated files are saved in `outputs/`.
+
+These include processed inscription datasets, training and test sequences, n-gram statistics, restoration predictions, and evaluation reports.
+
+### Evaluation Reports
+
+| File | Description |
+|---|---|
+| `results_inc.xlsx` | Incomplete-token restoration evaluation |
+| `results_mis.xlsx` | Missing-token prediction evaluation |
+| `results_combined.xlsx` | Combined restoration evaluation |
+| `Processed_Runestones.csv` | Processed runic inscription dataset |
+
+### Language Models
+
+Model files are stored in:
+
+```text
+outputs/models/
+```
+
+The directory contains serialized n-gram models, including literal and normalized unigram, bigram, and trigram statistics.
+
+## Jupyter Notebook
+
+The repository includes a notebook for interactive experimentation and inference:
+
+```text
+notebooks/runic_restoration_model.ipynb
+```
+
+The notebook uses serialized n-gram models and sample inscriptions to explore restoration behavior.
+
+When running in Google Colab, configure the repository and model file paths to match the notebook's execution environment.

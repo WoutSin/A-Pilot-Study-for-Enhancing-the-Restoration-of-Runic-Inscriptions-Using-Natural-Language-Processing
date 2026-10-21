@@ -1,12 +1,12 @@
-# Virtual environment
 .venv/
-
-# Python cache
+.venv/
 __pycache__/
-*.pyc
-
-# Environment variables
+*.py[cod]
+.ipynb_checkpoints/
 .env
-
-# VS Code local settings
 .vscode/
+.DS_Store
+# Generated experiment results (pretrained models included as starter files)
+outputs/*.csv
+outputs/*.txt
+outputs/*.xlsx
