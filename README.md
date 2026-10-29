@@ -182,14 +182,18 @@ outputs/models/
 
 The directory contains serialized n-gram models, including literal and normalized unigram, bigram, and trigram statistics.
 
-## Jupyter Notebook
+## Notebook
 
-The repository includes a notebook for interactive experimentation and inference:
+The repository includes an interactive Jupyter notebook for experimenting with the model and performing inference:
 
-```text
-notebooks/runic_restoration_model.ipynb
-```
+`notebooks/runic_restoration_model.ipynb`
 
-The notebook uses serialized n-gram models and sample inscriptions to explore restoration behavior.
+The notebook uses serialized n-gram models and sample inscriptions to explore runic restoration behavior.
 
-When running in Google Colab, configure the repository and model file paths to match the notebook's execution environment.
+### Run in Google Colab
+
+The notebook can be opened and executed directly in Google Colab without downloading or installing anything.
+
+[![Open in Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/drive/1xh4xN7L5npvtv3EDQH9sZj8HVqRQLMhf?usp=sharing)
+
+Simply click the badge, sign in with your Google account, and run the notebook.
